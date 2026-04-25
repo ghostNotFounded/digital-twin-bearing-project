@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bearing Monitor — Data Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='data.css') }}"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <!-- ── Top nav ── -->
+    <header class="topbar">
+      <a href="/" class="brand">
+        <span class="brand-bracket">[</span>DT<span class="brand-bracket"
+          >]</span
+        >
+        <span class="brand-text">Bearing Monitor</span>
+      </a>
+    </header>
+
+    <div class="dash-layout">
+      <!-- ── Sidebar: day selector ── -->
+      <aside class="sidebar">
+        <p class="sidebar-label">SELECT DAY</p>
+        <div class="day-list" id="day-list">
+          {% for d in days %}
+          <button
+            class="day-btn {% if loop.index0 == 0 %}active{% endif %}"
+            data-idx="{{ d.index }}"
+            title="{{ d.timestamp }}"
+          >
+            <span class="day-num">{{ d.label }}</span>
+            <span class="day-date"
+              >{{ d.timestamp[:10] if d.timestamp else '—' }}</span
+            >
+            <span class="day-hi-dot" id="dot-{{ d.index }}"></span>
+          </button>
+          {% endfor %}
+        </div>
+      </aside>
+
+      <!-- ── Main content ── -->
+      <main class="dash-main">
+        <!-- ── Header row ── -->
+        <div class="dash-header">
+          <div>
+            <h2 id="day-title">Day 1</h2>
+            <p class="dim" id="day-ts">—</p>
+          </div>
+          <div class="hi-meter-wrap">
+            <div class="hi-label">HEALTH INDEX</div>
+            <div class="hi-bar-track">
+              <div class="hi-bar-fill" id="hi-fill"></div>
+            </div>
+            <div class="hi-val" id="hi-val">—</div>
+          </div>
+          <div class="rul-box">
+            <div class="rul-label">EST. RUL</div>
+            <div class="rul-val" id="rul-val">— days</div>
+          </div>
+        </div>
+
+        <!-- ── Stat cards ── -->
+        <div class="stat-grid" id="stat-grid">
+          <!-- filled by JS -->
+        </div>
+
+        <!-- ── Charts ── -->
+        <div class="chart-grid">
+          <div class="chart-card span2">
+            <p class="chart-title">VIBRATION — TIME DOMAIN</p>
+            <canvas id="chart-vib" height="90"></canvas>
+          </div>
+          <div class="chart-card span2">
+            <p class="chart-title">FREQUENCY SPECTRUM (FFT)</p>
+            <canvas id="chart-fft" height="90"></canvas>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // ── Colour palette (matches CSS vars) ──
+      const C = {
+        fg: "#95d5b2",
+        dim: "#40916c",
+        bg2: "#002e1a",
+        warn: "#f4a261",
+        crit: "#e76f51",
+        grid: "rgba(64,145,108,0.15)",
+        white: "#d8f3dc",
+      };
+
+      const CHART_DEFAULTS = {
+        animation: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            grid: { color: C.grid },
+            ticks: { color: C.dim, maxTicksLimit: 8, font: { size: 10 } },
+          },
+          y: {
+            grid: { color: C.grid },
+            ticks: { color: C.dim, font: { size: 10 } },
+          },
+        },
+      };
+
+      function mkChart(id, type, data, opts = {}) {
+        const ctx = document.getElementById(id).getContext("2d");
+        return new Chart(ctx, {
+          type,
+          data,
+          options: { ...CHART_DEFAULTS, ...opts },
+        });
+      }
+
+      // Initialise empty charts
+      const vibChart = mkChart("chart-vib", "line", {
+        labels: [],
+        datasets: [
+          {
+            label: "Vibration (g)",
+            data: [],
+            borderColor: C.fg,
+            borderWidth: 1,
+            pointRadius: 0,
+            fill: false,
+          },
+        ],
+      });
+
+      const fftChart = mkChart("chart-fft", "line", {
+        labels: [],
+        datasets: [
+          {
+            label: "Magnitude",
+            data: [],
+            borderColor: C.dim,
+            borderWidth: 1,
+            pointRadius: 0,
+            fill: true,
+            backgroundColor: "rgba(64,145,108,0.15)",
+          },
+        ],
+      });
+
+      // ── Status helpers ──
+      function statusColor(hi) {
+        if (hi > 0.7) return C.fg;
+        if (hi > 0.4) return "#d4e157";
+        if (hi > 0.15) return C.warn;
+        return C.crit;
+      }
+      function statusLabel(hi) {
+        if (hi > 0.7) return "HEALTHY";
+        if (hi > 0.4) return "DEGRADING";
+        if (hi > 0.15) return "WARNING";
+        return "CRITICAL";
+      }
+
+      // ── Load day data ──
+      async function loadDay(idx) {
+        // Mark active button
+        document
+          .querySelectorAll(".day-btn")
+          .forEach((b) => b.classList.remove("active"));
+        const btn = document.querySelector(`.day-btn[data-idx="${idx}"]`);
+        if (btn) {
+          btn.classList.add("active");
+          btn.scrollIntoView({ block: "nearest" });
+        }
+
+        const res = await fetch(`/api/data?day=${idx}`);
+        if (!res.ok) {
+          console.error("Failed to load day", idx);
+          return;
+        }
+        const d = await res.json();
+
+        // Header
+        document.getElementById("day-title").textContent = `Day ${idx + 1}`;
+        document.getElementById("day-ts").textContent = d.timestamp || "—";
+        document.getElementById("rul-val").textContent = d.rul_days;
+
+        // HI meter
+        const hi = d.hi ?? 0;
+        document.getElementById("hi-fill").style.width =
+          `${(hi * 100).toFixed(1)}%`;
+        document.getElementById("hi-fill").style.background = statusColor(hi);
+        document.getElementById("hi-val").textContent = hi.toFixed(3);
+
+        // Stat cards
+        const tf = d.time_features || {};
+        const STATS = [
+          { key: "rms", label: "RMS", fmt: (v) => v.toFixed(4), unit: "g" },
+          { key: "peak", label: "Peak", fmt: (v) => v.toFixed(4), unit: "g" },
+          {
+            key: "kurtosis",
+            label: "Kurtosis",
+            fmt: (v) => v.toFixed(3),
+            unit: "",
+          },
+          {
+            key: "crest_factor",
+            label: "Crest Factor",
+            fmt: (v) => v.toFixed(3),
+            unit: "",
+          },
+          {
+            key: "impulse_factor",
+            label: "Impulse Factor",
+            fmt: (v) => v.toFixed(3),
+            unit: "",
+          },
+          {
+            key: "skewness",
+            label: "Skewness",
+            fmt: (v) => v.toFixed(4),
+            unit: "",
+          },
+          { key: "std", label: "Std Dev", fmt: (v) => v.toFixed(4), unit: "g" },
+          {
+            key: "mean_abs",
+            label: "Mean |x|",
+            fmt: (v) => v.toFixed(4),
+            unit: "g",
+          },
+        ];
+        const grid = document.getElementById("stat-grid");
+        grid.innerHTML = STATS.map(
+          (s) =>
+            `<div class="stat-card">
+          <div class="stat-label">${s.label}</div>
+          <div class="stat-val">${tf[s.key] != null ? s.fmt(tf[s.key]) : "—"}<span class="stat-unit"> ${s.unit}</span></div>
+        </div>`,
+        ).join("");
+
+        // Vibration chart
+        const ts = d.time_series || {};
+        vibChart.data.labels = (ts.t || []).map((v) => v.toFixed(4));
+        vibChart.data.datasets[0].data = ts.vibration || [];
+        vibChart.update();
+
+        // FFT chart
+        const ff = d.freq_features || {};
+        fftChart.data.labels = (ff.spectrum_freqs || []).map((f) =>
+          f < 1000 ? f.toFixed(0) : (f / 1000).toFixed(1) + "k",
+        );
+        fftChart.data.datasets[0].data = ff.spectrum_mag || [];
+        fftChart.update();
+
+        // Tach chart
+        const tt = d.tach_series || {};
+        tachChart.data.labels = (tt.t || []).map((v) => v.toFixed(4));
+        tachChart.data.datasets[0].data = tt.tach || [];
+        tachChart.update();
+
+        // BPFI chart
+        const harmonics = ff.bpfi_harmonics || {};
+        const bpfi_hz = ff.bpfi_hz;
+        bpfiChart.data.labels = Object.keys(harmonics).map((k) =>
+          bpfi_hz
+            ? `${k}\n(${(parseFloat(k.replace("BPFI×", "")) * bpfi_hz).toFixed(1)} Hz)`
+            : k,
+        );
+        bpfiChart.data.datasets[0].data = Object.values(harmonics);
+        bpfiChart.data.datasets[0].backgroundColor = Object.values(
+          harmonics,
+        ).map((v, i) => {
+          const maxV = Math.max(...Object.values(harmonics));
+          const ratio = maxV > 0 ? v / maxV : 0;
+          return ratio > 0.7 ? C.crit : ratio > 0.4 ? C.warn : C.dim;
+        });
+        bpfiChart.update();
+
+        // Highlight current day in HI chart
+        const hiDataset = hiChart.data.datasets[0];
+        hiDataset.pointBackgroundColor = (hiChart.data.labels || []).map(
+          (_, i) => (i === idx ? C.white : "transparent"),
+        );
+        hiDataset.pointRadius = (hiChart.data.labels || []).map((_, i) =>
+          i === idx ? 5 : 2,
+        );
+        hiChart.update();
+      }
+
+      // ── Wire sidebar clicks ──
+      document.getElementById("day-list").addEventListener("click", (e) => {
+        const btn = e.target.closest(".day-btn");
+        if (!btn) return;
+        loadDay(parseInt(btn.dataset.idx));
+      });
+
+      // ── Boot ──
+      (async () => {
+        await loadDay(0);
+      })();
+    </script>
+  </body>
+</html>

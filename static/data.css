@@ -1,0 +1,311 @@
+/* ── data.css — Dashboard styles (extends styles.css vars) ── */
+
+/* ── Reset body for dashboard ── */
+body {
+  max-height: unset;
+  overflow: auto;
+  font-family: "Courier New", "Lucida Console", monospace;
+}
+
+/* ── Topbar ── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1.5rem;
+  background: rgba(0, 18, 11, 0.92);
+  border-bottom: 1px solid var(--secondary);
+  backdrop-filter: blur(8px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.brand-bracket {
+  color: var(--secondary);
+}
+.brand-text {
+  color: var(--secondary2);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.topbar-hi {
+  font-size: 12px;
+  color: var(--foreground);
+  letter-spacing: 1px;
+}
+
+/* ── Layout ── */
+.dash-layout {
+  display: flex;
+  min-height: calc(100vh - 45px);
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 160px;
+  min-width: 160px;
+  border-right: 1px solid var(--secondary);
+  background: var(--background);
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0;
+  overflow-y: auto;
+  max-height: calc(100vh - 45px);
+  position: sticky;
+  top: 45px;
+}
+
+.sidebar-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--secondary);
+  padding: 0 1rem 0.5rem;
+  border-bottom: 1px solid var(--secondary);
+  margin-bottom: 0.5rem;
+}
+
+.day-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 0.5rem;
+}
+
+.day-btn {
+  all: unset;
+  display: flex;
+  flex-direction: column;
+  padding: 0.45rem 0.7rem;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.day-btn:hover {
+  background: var(--background2);
+  border-color: var(--secondary);
+}
+
+.day-btn.active {
+  background: var(--background2);
+  border-color: var(--foreground);
+}
+
+.day-btn::before,
+.day-btn::after {
+  content: none;
+} /* override global button pseudo */
+
+.day-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: 1px;
+}
+.day-date {
+  font-size: 9px;
+  color: var(--secondary);
+  letter-spacing: 0.5px;
+}
+
+.day-hi-dot {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--secondary);
+  transition: background 0.3s;
+}
+
+/* ── Main ── */
+.dash-main {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Dash header ── */
+.dash-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.dash-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--secondary2);
+}
+
+.dim {
+  font-size: 11px;
+  color: var(--secondary);
+  letter-spacing: 1px;
+}
+
+/* HI meter */
+.hi-meter-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 180px;
+}
+.hi-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--secondary);
+}
+.hi-bar-track {
+  height: 6px;
+  background: var(--background2);
+  border: 1px solid var(--secondary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.hi-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition:
+    width 0.5s ease,
+    background 0.5s ease;
+  background: var(--foreground);
+}
+.hi-val {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: 2px;
+}
+
+/* RUL box */
+.rul-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rul-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--secondary);
+}
+.rul-val {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--secondary2);
+  letter-spacing: 1px;
+}
+
+/* ── Stat cards ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+}
+
+@media (max-width: 1100px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.stat-card {
+  background: var(--background2);
+  border: 1px solid var(--secondary);
+  border-radius: 4px;
+  padding: 0.7rem 1rem;
+  transition: border-color 0.2s;
+}
+.stat-card:hover {
+  border-color: var(--foreground);
+}
+
+.stat-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--secondary);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.stat-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: 1px;
+}
+.stat-unit {
+  font-size: 10px;
+  color: var(--secondary);
+}
+
+/* ── Charts ── */
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.chart-card {
+  background: var(--background2);
+  border: 1px solid var(--secondary);
+  border-radius: 4px;
+  padding: 0.75rem 1rem 0.5rem;
+}
+
+.chart-card.span2 {
+  grid-column: span 2;
+}
+
+.chart-title {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--secondary);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+/* ── Badge override ── */
+.badge {
+  transition:
+    color 0.3s,
+    border-color 0.3s;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--secondary);
+  border-radius: 2px;
+}

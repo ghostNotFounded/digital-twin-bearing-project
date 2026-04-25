@@ -1,0 +1,120 @@
+:root {
+  --background: #00120b; /* Near-black green */
+  --background2: #002e1a; /* Deep jungle */
+  --foreground: #95d5b2; /* Bright seafoam */
+  --secondary: #40916c; /* Medium forest */
+  --secondary2: #d8f3dc; /* Pale spring green */
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family:
+    "Segoi UI", Tahoma, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  max-height: 100vh;
+  overflow: hidden;
+
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.container {
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+
+  .title-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .badge {
+    border-radius: 999px;
+    border: 1px solid var(--secondary);
+    padding: 0.5rem 1rem;
+    font-size: 12px;
+    color: var(--secondary2);
+    background-color: rgba(255, 255, 255, 0.05);
+    width: max-content;
+  }
+
+  h1 {
+    font-size: 50px;
+  }
+
+  ul {
+    list-style: none;
+    display: flex;
+    width: 30vw;
+    justify-content: space-between;
+
+    li {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+}
+
+button {
+  padding: 1rem 2rem;
+
+  /* Colors using your variables */
+  background-color: transparent;
+  color: var(--foreground);
+  border: 1px solid var(--secondary);
+  border-radius: 4px; /* Slightly rounded for a modern industrial feel */
+
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+
+  /* Smooth transition for the "glow" */
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+button:hover {
+  background-color: var(--secondary);
+  color: var(--background); /* Invert text color for contrast */
+
+  /* Digital Twin Glow Effect */
+  box-shadow:
+    0 0 15px var(--secondary),
+    0 0 5px var(--secondary);
+
+  transform: translateY(-2px);
+}
+
+button:active {
+  transform: translateY(0);
+  filter: brightness(1.2);
+}
+
+button::before {
+  content: "[";
+  margin-right: 10px;
+  opacity: 0.5;
+}
+
+button::after {
+  content: "]";
+  margin-left: 10px;
+  opacity: 0.5;
+}
+
+a {
+  text-decoration: none;
+}
