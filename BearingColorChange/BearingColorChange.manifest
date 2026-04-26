@@ -1,0 +1,10 @@
+{
+  "autodeskProduct": "Fusion360",
+  "type": "script",
+  "engine": "Python",
+  "name": "BearingColorChange",
+  "description": "Animates inner race color from green to red",
+  "author": "You",
+  "version": "1.0.0",
+  "runOnStartup": false
+}

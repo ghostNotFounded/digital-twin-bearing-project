@@ -1,8 +1,3 @@
-"""
-Digital Twin Flask Server — Bearing Health Monitoring
-Group 12 (2025-2026)
-"""
-
 import os
 import glob
 import re
@@ -23,13 +18,6 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "BearingData")
 FS = 97656          # vibration sampling frequency (Hz)
 PPR = 2             # tach pulses-per-revolution
 SUBSAMPLE = 4096    # points to send to frontend (downsampled for speed)
-
-# Bearing geometry for BPFI calculation (typical wind turbine bearing)
-# SKF 6205: n_balls=9, contact_angle=0°, ball_diameter=7.938mm, pitch_diameter=38.5mm
-N_BALLS      = 9
-BALL_DIA_MM  = 7.938
-PITCH_DIA_MM = 38.5
-CONTACT_ANG  = 0.0   # degrees
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -224,7 +212,6 @@ def _build_hi_series():
 
 HI_MAP, HI_TIMELINE = _build_hi_series()
 
-
 # ── Routes ───────────────────────────────────────────────────────────────────
 
 @app.route("/")
@@ -336,12 +323,15 @@ def api_data():
 
 @app.route("/api/health-index")
 def api_health_index():
+    day_idx = request.args.get("day", 0, type=int)
+    print(day_idx)
+
     files = get_mat_files()
     if not files:
         return jsonify({"error": "No data files found"}), 404
 
     # Current (latest) day
-    latest_fp = files[-1]
+    latest_fp = files[day_idx - 1]
     current_hi = HI_MAP.get(latest_fp, None)
 
     # Determine status label
@@ -383,4 +373,4 @@ def api_health_index():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
